@@ -68,6 +68,7 @@ typedef struct
 	int i2c_file;		/* I2C device */
 	int spi_file;		/* SPI device */
 	int cape_addr;		/* Cape Address */
+	int aux;			/* aux bits 3:1 */
 	int verbose;		/* Verbose level */
 } bfpga;
 
@@ -97,7 +98,7 @@ int bcc_i2c_pcf_rd(bfpga *s, int bit);
 void bcc_i2c_pcf_wr(bfpga *s, int bit, int val);
 int bcc_spi_txrx(bfpga *s, uint8_t *tx, uint8_t *rx, __u32 len);
 int bcc_spi_txrx_addr(bfpga *s, uint8_t *tx, uint8_t *rx, __u32 len);
-bfpga *bcc_init(int i2c_bus, int spi_bus, int spi_add, int cape_addr, int verbose);
+bfpga *bcc_init(int i2c_bus, int spi_bus, int spi_add, int cape_addr, int aux, int verbose);
 FILE *bfpga_open_bitfile(bfpga *s, char *bitfile, long *n);
 int bcc_cfg(bfpga *s, char *bitfile);
 int bcc_pgm(bfpga *s, char *bitfile);

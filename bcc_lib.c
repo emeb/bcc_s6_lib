@@ -120,7 +120,7 @@ int bcc_i2c_pcf_rd(bfpga *s, int bit)
 	return (bcc_i2c_get(s, 0x38+s->cape_addr) >> bit) & 1;
 }
 
-/* get PCF GPIO bit */
+/* set PCF GPIO bit */
 void bcc_i2c_pcf_wr(bfpga *s, int bit, int val)
 {
 	int oldval = bcc_i2c_get(s, 0x38+s->cape_addr) | 0xC0;		// don't clear uppers
@@ -227,7 +227,7 @@ int bcc_chkprom(bfpga *s, const unsigned char *prom)
 }
 
 /* initialize our FPGA interface */
-bfpga *bcc_init(int i2c_bus, int spi_bus, int spi_add, int cape_addr, int verbose)
+bfpga *bcc_init(int i2c_bus, int spi_bus, int spi_add, int cape_addr, int aux, int verbose)
 {
 	bfpga *s;
 	char filename[20];
@@ -248,6 +248,7 @@ bfpga *bcc_init(int i2c_bus, int spi_bus, int spi_add, int cape_addr, int verbos
 	s->spi_busno = spi_bus;
 	s->spi_devno = spi_add;
 	s->cape_addr = cape_addr & 3;
+	s->aux = aux & 7;
 	
 	/* set verbose level */
 	s->verbose = verbose;
@@ -281,6 +282,12 @@ bfpga *bcc_init(int i2c_bus, int spi_bus, int spi_add, int cape_addr, int verbos
 	bcc_i2c_pcf_wr(s, PCF_AUX_0, 1);
 	qprintf(s, "bcc_init: PCF reads 0x%02X\n", bcc_i2c_get(s, 0x38+s->cape_addr));
 
+	/* set PCF AUX3-1 per aux var */
+	bcc_i2c_pcf_wr(s, PCF_AUX_3, (s->aux>>3)&1);
+	bcc_i2c_pcf_wr(s, PCF_AUX_2, (s->aux>>2)&1);
+	bcc_i2c_pcf_wr(s, PCF_AUX_1, (s->aux>>1)&1);
+	qprintf(s, "bcc_init: PCF reads 0x%02X\n", bcc_i2c_get(s, 0x38+s->cape_addr));
+	
 	/* Open the SPI port */
 	sprintf(filename, "/dev/spidev%d.%d", spi_bus, spi_add);
 	s->spi_file = open(filename, O_RDWR);

@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include "bcc_lib.h"
 
-#define VERSION "0.2"
+#define VERSION "0.3"
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
 static void help(void) __attribute__ ((noreturn));
@@ -28,11 +28,12 @@ static void help(void) __attribute__ ((noreturn));
 static void help(void)
 {
 	fprintf(stderr,
-	    "Usage: bcc_tool [-r addr][-w addr data][-v][-V] [BITSTREAM] \n"
+	    "Usage: bcc_tool [-r addr][-w addr data][-x data][-v][-V] [BITSTREAM] \n"
 		"  BITSTREAM is a file containing the FPGA bitstream to download\n"
 		"  -a cape at addr [0-3] (default = 0)\n"
 		"  -r read SPI control port at addr\n"
 		"  -w write SPI control port at addr w/ data\n"
+		"  -x set aux bits 3:1 to data\n"
 		"  -v enables verbose progress messages\n"
 		"  -V prints the tool version\n");
 	exit(1);
@@ -42,7 +43,7 @@ int main(int argc, char **argv)
 {
 	bfpga *bs;
 	int flags = 0, read = 0, write = 0, verbose = 0;
-	int addr = 0, data = 0, cape_addr = 0;
+	int addr = 0, data = 0, cape_addr = 0, aux = 0;
 
 	/* handle (optional) flags first */
 	while (1+flags < argc && argv[1+flags][0] == '-')
@@ -68,6 +69,11 @@ int main(int argc, char **argv)
 				data = atoi(argv[flags+3]);
 			flags+=3;
 			break;
+		case 'x':
+			if (2+flags < argc)
+				aux = (atoi(argv[flags+2]) & 3);
+			flags++;
+			break;			
 		case 'v':
 			verbose = 1;
 			break;
@@ -84,7 +90,7 @@ int main(int argc, char **argv)
 	}
 
 	/* open up hardware */
-	if((bs = bcc_init(1, 1, 0, cape_addr, verbose)) == NULL)
+	if((bs = bcc_init(1, 1, 0, cape_addr, aux, verbose)) == NULL)
 	{
 		fprintf(stderr, "Couldn't access hardware\n");
 		exit(2);
